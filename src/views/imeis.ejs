@@ -1,0 +1,473 @@
+
+<%- include ('partials/_header')%>
+<nav class="navbar navbar-dark bg-dark">
+  <a class="navbar-brand" href="/">Coverage map <%= data.tac%></a>
+</nav>
+
+<div class="container-fluid">
+    <div class="row mt-5">
+        <div class="col-8" >
+
+            <style>
+                #chartdiv {
+                  width: 100%;
+                  height: 500px;
+                }
+                
+            </style>
+             
+            <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/maps.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+            <script>src="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css"</script>
+            <script>src="//code.jquery.com/jquery-1.12.4.js"</script>
+            
+            <!-- Chart code -->
+            <script>
+                
+            
+            am4core.ready(function() {
+            
+            // Themes begin
+            am4core.useTheme(am4themes_animated);
+            // Themes end
+            
+            // Create map instance
+            var chart = am4core.create("chartdiv", am4maps.MapChart);
+            
+            // Set map definition
+            chart.geodataSource.url = "https://www.amcharts.com/lib/4/geodata/json/worldLow.json";
+            
+            let stringQuery = [];
+            let act1 = [];
+            let act2 = [];
+            let act3 = [];
+
+            '<% var x = (data.values).length; %>'
+            '<% let arrayQuery = [];%>'
+            '<% for (var i =0; i <= x -1;  i++ ) { %>'
+            '<% let dato = Object.values(data.values[i])%>'
+            '<% arrayQuery.push(dato); %>'
+            '<% } %>'
+
+            stringQuery = '<%= arrayQuery%>'
+            act1 = '<%= data.a1%>'
+            act2 = '<%= data.a2%>'
+            act3 = '<%= data.a3%>'
+      
+            let arrayQuery = stringQuery.split(",");
+                      
+            let arr = [];
+            for (var i = 0; i < arrayQuery.length -1; i+=4){
+              let ar = [arrayQuery[i],arrayQuery[i+1],arrayQuery[i+2],arrayQuery[i+3]];
+              arr.push(ar);
+            }
+            
+            
+            function MakeCaps(){
+                  chart.geodataSource.events.on("parseended", function(event) {
+                    
+                    //fetchear los datos en un array
+                    
+                     
+                    let conditionGSM = [];
+                    let companysGSM = [];
+
+                    let conditionUMTS = [];
+                    let companysUMTS = [];
+
+
+                    let conditionLTE = [];
+                    let companysLTE = [];
+                    
+
+                    let data = [];
+
+                    for(var i = 0; i <= event.target.data.features.length -1; i++ ) {
+                      mydatafetch(i);
+                      pushing(i);
+                    }
+                    
+
+                    function mydatafetch(x) {
+                      let companyGSM = [];
+                      let companyUMTS = [];
+                      let companyLTE = [];
+                      for (var i = 0; i <= arr.length -1; i++){
+                        if(arr[i][1] === event.target.data.features[x].properties.name){
+
+
+                          if(arr[i][2] === "GSM"){
+                            if (!(conditionGSM.includes(arr[i][1]))){
+                              conditionGSM.push(event.target.data.features[x].id);
+                            }
+                            if (!(companyGSM.includes(arr[i][0]))){
+                              companyGSM.push(arr[i][0]);
+                            }
+                          }
+
+
+                          if(arr[i][2] === "UMTS"){
+                            if (!(conditionUMTS.includes(arr[i][1]))){
+                              conditionUMTS.push(event.target.data.features[x].id);
+                            }
+                            if (!(companyUMTS.includes(arr[i][0]))){
+                              companyUMTS.push(arr[i][0]);
+                            }
+                          }
+                          
+                          
+                          if(arr[i][2] === "LTE-TDD"){
+                            if (!(conditionLTE.includes(arr[i][1]))){
+                              conditionLTE.push(event.target.data.features[x].id);
+                            }
+                            if (!(companyLTE.includes(arr[i][0]))){
+                              companyLTE.push(arr[i][0]);
+                            }
+                          }
+
+                          if(arr[i][2] === "LTE-FDD"){
+                            if (!(conditionLTE.includes(arr[i][1]))){
+                              conditionLTE.push(event.target.data.features[x].id);
+                            }
+                            if (!(companyLTE.includes(arr[i][0]))){
+                              companyLTE.push(arr[i][0]);
+                            }
+                          }
+                          
+                          
+
+                        }
+                      }
+                      companysGSM.push({id:event.target.data.features[x].id, companys: companyGSM});
+                      companysUMTS.push({id:event.target.data.features[x].id, companys: companyUMTS});
+                      companysLTE.push({id:event.target.data.features[x].id, companys: companyLTE});
+                    }
+                    
+
+            
+                    function pushing (x) {
+                      
+
+                      let companysOfGsm = "";
+                        for (var i = 0; i <= companysGSM.length -1; i++ ){
+                          if (companysGSM[i].id === event.target.data.features[x].id) {
+                            companysOfGsm = companysGSM[i].companys.toString();
+                          }
+                        }
+
+                      let companysOfUMTS = "";
+                      for (var i = 0; i <= companysUMTS.length -1; i++ ){
+                        if (companysUMTS[i].id === event.target.data.features[x].id) {
+                          companysOfUMTS = companysUMTS[i].companys.toString();
+                        }
+                      }
+
+                      let companysOfLTE = "";
+                      for (var i = 0; i <= companysLTE.length -1; i++ ){
+                        if (companysLTE[i].id === event.target.data.features[x].id) {
+                          companysOfLTE = companysLTE[i].companys.toString();
+                        }
+                      }
+
+                      if (conditionGSM.includes(event.target.data.features[x].id) && conditionUMTS.includes(event.target.data.features[x].id) && conditionLTE.includes(event.target.data.features[x].id) && act1 == "2G" && act2 == "3G" && act3 == "4G"){
+                        
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          GSM: "GSM",
+                          CGSM: companysOfGsm,
+                          UMTS: "UMTS",
+                          CUMTS: companysOfUMTS,
+                          LTE: "LTE",
+                          CLTE:companysOfLTE,
+                          "fill": am4core.color("#E14904")
+                        })
+                      }
+
+                      else if (conditionGSM.includes(event.target.data.features[x].id) && conditionUMTS.includes(event.target.data.features[x].id) && act1 == "2G" && act2 == "3G" && act3 != "4G"){
+                        
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          GSM: "GSM",
+                          CGSM: companysOfGsm,
+                          UMTS: "UMTS",
+                          CUMTS: companysOfUMTS,
+                          "fill": am4core.color("#DFD27C")
+                        })
+                      }
+                      
+                      else if (conditionGSM.includes(event.target.data.features[x].id) && conditionLTE.includes(event.target.data.features[x].id) && act1 == "2G" && act2 != "3G" && act3 == "4G"){
+                        
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          GSM: "GSM",
+                          CGSM: companysOfGsm,
+                          LTE: "LTE",
+                          CLTE:companysOfLTE,
+                          "fill": am4core.color("#C82FC0")
+                        })
+                      }
+            
+                      else if (conditionUMTS.includes(event.target.data.features[x].id) && conditionLTE.includes(event.target.data.features[x].id) && act1 != "2G" && act2 == "3G" && act3 == "4G"){
+            
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          UMTS: "UMTS",
+                          CUMTS: companysOfUMTS,
+                          LTE: "LTE",
+                          CLTE:companysOfLTE,
+                          "fill": am4core.color("#F5A858")
+                        })
+                      }
+                      else if (conditionUMTS.includes(event.target.data.features[x].id) && act2 == "3G"){
+            
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          UMTS: "UMTS",
+                          CUMTS: companysOfUMTS,
+                          "fill": am4core.color("#EB6BAE")
+                        })
+                      }
+                      else if (conditionGSM.includes(event.target.data.features[x].id) && act1 == "2G"){
+            
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          GSM: "GSM",
+                          CGSM: companysOfGsm,
+                          "fill": am4core.color("#BFBFF6")
+                        })
+                      }
+                      else if (conditionLTE.includes(event.target.data.features[x].id) && act3 == "4G"){
+            
+                        data.push({
+                          id: event.target.data.features[x].id,
+                          LTE: "LTE",
+                          CLTE: companysOfLTE,
+                          "fill": am4core.color("#FFE501")
+                        })
+                      }
+                    else {
+                      data.push({
+                          id: event.target.data.features[x].id,
+                          INFO: "No info",
+                          "fill": am4core.color("#5E6175")
+                        })
+                    }
+
+                      
+                      
+                    }
+            
+                    worldSeries.data = data;
+                    
+                  })  
+                }
+                
+            
+            
+            
+            // Set projection
+            chart.projection = new am4maps.projections.Mercator();
+            
+            // Add zoom control
+            chart.zoomControl = new am4maps.ZoomControl();
+
+            // Set initial zoom
+            chart.homeZoomLevel = 1;
+            // Series for World map
+            MakeCaps();
+            
+            
+            var worldSeries = chart.series.push(new am4maps.MapPolygonSeries());
+            
+            worldSeries.exclude = ["AQ"];
+            worldSeries.useGeodata = true;
+            
+            var polygonTemplate = worldSeries.mapPolygons.template;
+            polygonTemplate.propertyFields.fill = "fill";
+            polygonTemplate.tooltipText = "{name}:\n {GSM}\n {CGSM}\n {UMTS}\n {CUMTS}\n {LTE}\n {CLTE}\n {INFO}\n";
+            polygonTemplate.fill = am4core.color("#5E6175");
+            
+
+                //focus
+            polygonTemplate.events.on("hit", function(ev) {
+            ev.target.series.chart.zoomToMapObject(ev.target);
+
+
+            var back = chart.createChild(am4core.ZoomOutButton);
+              back.align = "right";
+              back.events.on("hit", function(ev) {
+              chart.goHome();
+              back.hide();
+              });
+            });
+            
+            /* Add legend */
+            var legend = new am4maps.Legend();
+            legend.parent = chart.chartContainer;
+            legend.background.fill = am4core.color("#000");
+            legend.background.fillOpacity = 0.05;
+            legend.width = 130;
+            legend.align = "left";
+            legend.padding(10, 15, 10, 15);
+            legend.data = [{
+              "name": "2g/3g/4g",
+              "fill":"#E14904"
+            }, {
+              "name": "2g/4g",
+              "fill": "#C82FC0"
+            }, {
+              "name": "2g/3g",
+              "fill": "#DFD27C"
+            }, {
+              "name": "3g/4g",
+              "fill": "#F5A858"
+            }, {
+              "name": "2g",
+              "fill": "#BFBFF6"
+            }, {
+              "name": "3g",
+              "fill": "#EB6BAE"
+            }, {
+              "name": "4g",
+              "fill": "#FFE501"
+            }
+            ];
+            legend.itemContainers.template.clickable = false;
+            legend.itemContainers.template.focusable = false;
+
+            var legendTitle = legend.createChild(am4core.Label);
+            legendTitle.text = "Legend:";
+
+
+            
+            // Hover state
+            var hs = polygonTemplate.states.create("hover");
+            hs.properties.fill = am4core.color("#3D9E60");
+            
+            
+            
+            }); // end am4core.ready()
+            </script>
+            
+            <!-- HTML -->
+            <div id="chartdiv"></div>
+        </div>
+        <div class="col-4">
+            <div class="card">
+                <div class="card-body">
+                    <form action="/show" method="post">
+                        <div class="form-group">
+                            <input type="number" name="tac" placeholder="TAC" class="form-control" id="numero">
+                            <script>
+                            let tac = '<%= data.tac%>'
+                            var input=  document.getElementById('numero');
+                            if (tac.length > 1){
+                              tac = tac.slice(4)
+                              input.value = tac
+                            }
+                            else {
+                              tac = "TAC"
+                            }
+                            input.placeholder = tac
+                              input.addEventListener('input',function(){
+                                if (this.value.length > 8) 
+                                   this.value = this.value.slice(0,8);
+                              })
+                              </script>
+                          </div>
+                        <!-- <style> button {position: absolute; right: -50%;}</style> -->
+                        <input type="checkbox" name="act1" value="2G" id="act1">
+                          <label for="act1"> 2G</label>
+                        <input type="checkbox" name="act2" value="3G" id="act2">
+                          <label for="act2"> 3G</label>
+                        <input type="checkbox" name="act3" value="4G" id="act3">
+                          <label for="act2"> 4G</label>
+                        <script>
+                          act1 = '<%= data.a1%>'
+                          act2 = '<%= data.a2%>'
+                          act3 = '<%= data.a3%>'
+                          if(act1 == "2G"){
+                            document.getElementById('act1').checked = true
+                          }
+                          if(act2 == "3G"){
+                            document.getElementById('act2').checked = true
+                          }
+                          if(act3 == "4G"){
+                            document.getElementById('act3').checked = true
+                          }
+                        </script>
+                        <a>&nbsp&nbsp&nbsp</a>
+                        <style>
+                          button { display:inline-block; 
+                            padding:0.3em 1.2em;
+                            margin:0 0.3em 0.3em 0;
+                            border-radius:2em;
+                            box-sizing: border-box;
+                            text-decoration:none;
+                            font-family:'Roboto',sans-serif;
+                            font-weight:bolder;
+                            color:#FFFFFF;
+                            background-color:#343A40;
+                            text-align:center;
+                            transition: all 0.2s;
+                            }
+                          button:hover{ background-color:#343A40;
+                          }
+                        </style>
+                        <button type="submit" class="button">Show info</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+  </head>
+  <body>
+    <table>
+<table id ='table_id'class="table table-bordered table-hover">
+  <thead>
+    <tr>
+      <th>Country</td>
+      <th>Company</td>
+      <th>Access technology</td>
+      <th>Frequency</td>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (data.values) { %>
+      <% for(var i = 0; i < (data.values).length; i++) { %>
+        <tr>
+          
+          <td><%= data.values[i].COUNTRY %></td>
+          <td><%= data.values[i].NETWORK %></td>
+          <td><%= data.values[i].ACCESSTECH %></td>
+          <td><%= data.values[i].FREQUENCY %></td>
+        </tr>
+      <% } %>
+    <% } %>
+  </tbody>
+</table> 
+    <script>
+    $(function(){
+
+        $("#table_id").dataTable(
+          {
+          "scrollY":        "200px",
+          "scrollCollapse": true,
+          "paging":         false
+      }
+        );
+    })
+    </script>
+  </body>
+  </html>
+</div>
+<%- include ('partials/_footer')%>
